@@ -1,0 +1,608 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Private Markets Reporting Platform</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky header + tab strip; KPI row first, then paired chart cards, then tables. Cool slate neutrals with one blue accent. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --surface2:#f7f8fb; --ink:#101826; --ink2:#465263; --muted:#6f7a8b; --line:#e0e5ec; --grid:#e9edf2;
+  --blue:#2a78d6; --orange:#eb6834; --aqua:#1baf7a; --violet:#6250d6;
+  --blue-tint:#9cc0ee; --accent:#2a78d6; --accent-ink:#ffffff;
+  --good:#1a7f4b; --good-bg:#e4f4ec; --warn:#a86a00; --warn-bg:#fbefd5; --bad:#c0392b; --bad-bg:#fbe5e2;
+  --shadow:0 1px 2px rgba(16,24,38,.05);
+  --f-sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1117; --surface:#151b24; --surface2:#1a212c; --ink:#e8edf4; --ink2:#a8b3c2; --muted:#7f8b9b; --line:#252d39; --grid:#202833;
+  --blue:#3987e5; --orange:#d95926; --aqua:#199e70; --violet:#9085e9; --blue-tint:#2b4a73; --accent:#3987e5; --accent-ink:#06121f;
+  --good:#46b982; --good-bg:#12291f; --warn:#e2a93f; --warn-bg:#2e2410; --bad:#ef6f61; --bad-bg:#33181a; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --surface:#151b24; --surface2:#1a212c; --ink:#e8edf4; --ink2:#a8b3c2; --muted:#7f8b9b; --line:#252d39; --grid:#202833;
+  --blue:#3987e5; --orange:#d95926; --aqua:#199e70; --violet:#9085e9; --blue-tint:#2b4a73; --accent:#3987e5; --accent-ink:#06121f;
+  --good:#46b982; --good-bg:#12291f; --warn:#e2a93f; --warn-bg:#2e2410; --bad:#ef6f61; --bad-bg:#33181a; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-sans);font-size:14px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:1240px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:20px 0 14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:34px;height:34px;border-radius:6px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-mono);font-weight:500;font-size:13px;letter-spacing:.02em;flex:none}
+h1{font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em;line-height:1.2}
+.sub{color:var(--muted);font-size:12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font-family:var(--f-mono);font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--ink2);background:var(--surface);white-space:nowrap}
+.chip.sim{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:var(--warn-bg)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin:0 0 20px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs a{padding:10px 14px;color:var(--ink2);text-decoration:none;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:13.5px}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+a:focus-visible,button:focus-visible,th[tabindex]:focus-visible,tr[tabindex]:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:none;color:var(--ink2);padding:6px 13px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:500}
+select{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+h2{font-size:15px;font-weight:600;margin:0 0 2px;letter-spacing:-.005em}
+h3{font-size:12px;font-weight:500;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p.lede{margin:0 0 6px;color:var(--ink2);max-width:75ch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;box-shadow:var(--shadow);min-width:0}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi .v{font-family:var(--f-mono);font-size:24px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .d{font-size:12px;color:var(--ink2);margin-top:5px;font-family:var(--f-mono)}
+.d .up{color:var(--good)} .d .dn{color:var(--bad)}
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.card .note{font-size:12px;color:var(--muted);margin:4px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink2);margin:8px 0 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chart{width:100%;position:relative}
+.chart svg{display:block;max-width:100%;overflow:visible}
+svg text{font-family:var(--f-sans);font-size:11px;fill:var(--muted)}
+svg text.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+svg text.lbl{fill:var(--ink2)}
+svg text.val{fill:var(--ink);font-family:var(--f-mono);font-size:11px}
+.tablewrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none;background:var(--surface)}
+th.r,td.r{text-align:right}
+th:hover{color:var(--ink)}
+th .ar{display:inline-block;width:10px;color:var(--accent)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:12.5px}
+td.wrap{white-space:normal;min-width:200px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--surface2)}
+tbody tr.sel td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.good{color:var(--good);background:var(--good-bg)} .pill.warn{color:var(--warn);background:var(--warn-bg)} .pill.bad{color:var(--bad);background:var(--bad-bg)} .pill.neutral{color:var(--ink2);background:var(--surface2);border:1px solid var(--line)}
+.tag{font-family:var(--f-mono);font-size:11px;padding:1px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--line);color:var(--ink2)}
+.commentary{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.commentary li{padding-left:14px;position:relative;color:var(--ink2);max-width:90ch}
+.commentary li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:1px;background:var(--accent)}
+.commentary b{color:var(--ink);font-weight:600}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:260px}
+#tip .t{font-weight:600;margin-bottom:4px}
+#tip .row{display:flex;justify-content:space-between;gap:16px;font-family:var(--f-mono);font-size:11.5px}
+#tip .row i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;counter-reset:step}
+.flow>div{border:1px solid var(--line);border-radius:10px;padding:12px 12px 12px;background:var(--surface2);position:relative;min-width:0}
+.flow b{display:block;font-size:13px;margin-bottom:4px}
+.flow span{font-size:12px;color:var(--ink2);display:block}
+.flow em{font-style:normal;font-family:var(--f-mono);font-size:10.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px}
+dl.defs{display:grid;grid-template-columns:minmax(100px,170px) 1fr;gap:10px 18px;margin:0}
+dl.defs dt{font-weight:600} dl.defs dd{margin:0;color:var(--ink2)}
+dl.defs code,.code{font-family:var(--f-mono);font-size:12px;background:var(--surface2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--ink)}
+.bar-score{display:flex;align-items:center;gap:10px}
+.bar-score .track{flex:1;height:6px;background:var(--grid);border-radius:3px;overflow:hidden;min-width:60px}
+.bar-score .fill{height:100%;background:var(--accent);border-radius:3px}
+.tl{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:90px 1fr auto;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:start}
+.tl li:last-child{border-bottom:0}
+.tl .w{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
+.tl b{display:block}.tl span.d{color:var(--ink2);font-size:13px}
+footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;max-width:100ch}
+.empty{color:var(--muted)}
+@media (max-width:640px){.kpi .v{font-size:20px}.tl li{grid-template-columns:1fr;gap:4px}dl.defs{grid-template-columns:1fr;gap:2px}dl.defs dd{margin-bottom:10px}h1{font-size:16px}}
+@media (prefers-reduced-motion:no-preference){.view{animation:fade .25s ease-out}@keyframes fade{from{opacity:.4}to{opacity:1}}}
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo" aria-hidden="true">ARC</div>
+      <div><h1>Alder Ridge Capital · Private Markets Reporting</h1><div class="sub">Unified private equity and private credit portfolio view</div></div></div>
+    <div class="meta"><span class="chip">As of 30 Sep 2026 · Q3</span><span class="chip">USD millions</span><span class="chip sim" title="Fictional firm, funds and companies">Simulated data</span></div>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Dashboard sections"></nav>
+  <main id="view" class="view"></main>
+  <footer>Alder Ridge Capital, its funds, portfolio companies and borrowers are fictional. All figures come from a seeded simulation built to show how a reporting platform consolidates administrator, loan-agent and ledger data into fund and portfolio metrics. They are not real performance. The base rate is assumed at 3.75%.</footer>
+</div>
+<div id="tip" role="tooltip" hidden></div>
+<script>
+/* Simulation + calculation engine. Pure JS, no DOM. All data is synthetic. */
+(function (root) {
+'use strict';
+const NQ = 35, FIRST_YEAR = 2018, LAST = NQ - 1;           // Q1'18 .. Q3'26
+const BASE_RATE = 0.0375;                                   // assumed SOFR for the simulation
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeRand(seed){const r=mulberry32(seed);return{u:r,range:(a,b)=>a+(b-a)*r(),int:(a,b)=>Math.floor(a+r()*(b-a+1)),
+  n:()=>{let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);},pick:a=>a[Math.floor(r()*a.length)]};}
+const qLabel=i=>`Q${i%4+1} '${String(FIRST_YEAR+Math.floor(i/4)).slice(2)}`;
+const qYear=i=>FIRST_YEAR+Math.floor(i/4);
+const qDate=i=>Date.UTC(qYear(i),(i%4)*3+3,0);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- performance maths ---------- */
+function npv(flows,r){const t0=flows[0].t;let s=0;for(const f of flows)s+=f.v/Math.pow(1+r,(f.t-t0)/31557600000);return s;}
+function xirr(flows){
+  flows=flows.filter(f=>f.v!==0);
+  if(flows.length<2||!flows.some(f=>f.v>0)||!flows.some(f=>f.v<0))return null;
+  let lo=-0.95,hi=10,flo=npv(flows,lo),fhi=npv(flows,hi);
+  if(flo*fhi>0)return null;
+  for(let k=0;k<200;k++){const mid=(lo+hi)/2,fm=npv(flows,mid);if(Math.abs(fm)<1e-10)return mid;if(flo*fm<0){hi=mid;fhi=fm;}else{lo=mid;flo=fm;}}
+  return (lo+hi)/2;
+}
+/* rows: [{i,call,dist,nav}] ordered by quarter. Metrics as of quarter `upTo`. */
+function metrics(rows,upTo){
+  upTo=upTo==null?LAST:upTo;
+  const r=rows.filter(x=>x.i<=upTo);
+  if(!r.length)return null;
+  let pic=0,dist=0;const flows=[];
+  for(const x of r){pic+=x.call;dist+=x.dist;flows.push({t:qDate(x.i),v:x.dist-x.call});}
+  const nav=r[r.length-1].nav;
+  flows[flows.length-1]={t:flows[flows.length-1].t,v:flows[flows.length-1].v+nav};
+  return{pic,dist,nav,dpi:pic?dist/pic:0,rvpi:pic?nav/pic:0,tvpi:pic?(dist+nav)/pic:0,irr:xirr(flows)};
+}
+function pool(funds,upTo){
+  const rows=[];
+  for(let i=0;i<NQ;i++){let call=0,dist=0,nav=0;for(const f of funds){const x=f.rows.find(r=>r.i===i);if(x){call+=x.call;dist+=x.dist;nav+=x.nav;}}rows.push({i,call,dist,nav});}
+  return{rows:rows.filter(r=>r.call||r.dist||r.nav),m:null};
+}
+function pooled(funds,upTo){const p=pool(funds).rows;return metrics(p,upTo);}
+
+/* ---------- fund simulation ---------- */
+const FUND_DEFS=[
+ {id:'BO3',name:'ARC Buyout Partners III',short:'Buyout III',strat:'PE',sub:'Buyout',vintage:2018,commit:600,callQ:20,pct:.94,g:.0385,vol:.022,dStart:10,dMult:1.0,fee:.0175,n:7,mult:2.05},
+ {id:'DL1',name:'ARC Direct Lending I',short:'Direct Lending I',strat:'PC',sub:'Direct lending',vintage:2018,commit:500,callQ:8,pct:.92,g:.0262,vol:.003,inc:.0215,repay:12,fee:.0125,n:9},
+ {id:'GE1',name:'ARC Growth Equity I',short:'Growth I',strat:'PE',sub:'Growth equity',vintage:2019,commit:450,callQ:18,pct:.9,g:.0425,vol:.03,dStart:11,dMult:.95,fee:.02,n:7,mult:1.95},
+ {id:'MZ2',name:'ARC Mezzanine II',short:'Mezzanine II',strat:'PC',sub:'Mezzanine',vintage:2020,commit:400,callQ:10,pct:.9,g:.0285,vol:.004,inc:.0185,repay:14,fee:.015,n:7},
+ {id:'SE1',name:'ARC Secondaries I',short:'Secondaries I',strat:'PE',sub:'Secondaries',vintage:2020,commit:350,callQ:12,pct:.88,g:.0335,vol:.015,dStart:4,dMult:1.3,fee:.01,n:8,mult:1.5},
+ {id:'BO4',name:'ARC Buyout Partners IV',short:'Buyout IV',strat:'PE',sub:'Buyout',vintage:2021,commit:900,callQ:20,pct:.86,g:.036,vol:.024,dStart:12,dMult:1.0,fee:.0175,n:6,mult:1.4},
+ {id:'DL2',name:'ARC Direct Lending II',short:'Direct Lending II',strat:'PC',sub:'Direct lending',vintage:2021,commit:800,callQ:10,pct:.93,g:.0268,vol:.003,inc:.0215,repay:14,fee:.0125,n:10},
+ {id:'GE2',name:'ARC Growth Equity II',short:'Growth II',strat:'PE',sub:'Growth equity',vintage:2022,commit:700,callQ:18,pct:.8,g:.033,vol:.03,dStart:12,dMult:1,fee:.02,n:6,mult:1.18},
+ {id:'SS1',name:'ARC Special Situations I',short:'Special Sits I',strat:'PC',sub:'Special situations',vintage:2022,commit:450,callQ:12,pct:.85,g:.031,vol:.012,inc:.011,repay:16,fee:.015,n:6},
+ {id:'DL3',name:'ARC Direct Lending III',short:'Direct Lending III',strat:'PC',sub:'Direct lending',vintage:2024,commit:1000,callQ:8,pct:.78,g:.0262,vol:.003,inc:.0212,repay:14,fee:.0125,n:8}
+];
+
+function simulateFund(def,R){
+  const start=(def.vintage-FIRST_YEAR)*4+1, rows=[];
+  const w=[];for(let a=0;a<def.callQ;a++)w.push((Math.sin(Math.PI*(a+.5)/def.callQ)+.35)*R.range(.85,1.15));
+  const ws=w.reduce((s,x)=>s+x,0), total=def.commit*def.pct;
+  let nav=0;
+  for(let i=start;i<=LAST;i++){
+    const a=i-start;
+    const call=a<def.callQ?total*w[a]/ws:0;
+    const fee=a<def.callQ?def.commit*def.fee/4:nav*def.fee*.7/4;
+    let g,dist=0;
+    if(def.strat==='PE'){
+      g=def.g*(.35+.65*Math.min(1,a/10))+R.n()*def.vol*.5;
+      if(R.u()<.07)g-=.03;
+      if(a>=def.dStart){dist=nav*Math.min(.09,.012+.004*(a-def.dStart))*def.dMult*R.range(.55,1.45);}
+    }else{
+      g=def.g+R.n()*def.vol;
+      if(a>=2)dist+=nav*def.inc;
+      if(a>=def.repay)dist+=nav*Math.min(.12,.03+.006*(a-def.repay))*R.range(.7,1.3);
+    }
+    const grown=nav*(1+g);
+    dist=Math.min(dist,grown);
+    nav=Math.max(0,grown+call-dist-fee);
+    rows.push({i,call,dist,nav,fee});
+  }
+  return Object.assign({},def,{start,rows});
+}
+
+/* ---------- holdings & loans ---------- */
+const SECTORS={
+ 'Software':['Systems','Labs','Cloud','Analytics'],'Healthcare':['Health','Diagnostics','Biosciences','Care'],
+ 'Industrials':['Industries','Components','Manufacturing','Dynamics'],'Business Services':['Partners','Solutions','Group','Services'],
+ 'Consumer':['Brands','Foods','Home','Outdoors'],'Financial Services':['Payments','Insurance Services','Advisory','Risk'],
+ 'Energy Transition':['Renewables','Power','Grid','Energy'],'Logistics':['Freight','Logistics','Supply Co','Cold Chain']};
+const PREFIX=['Aldine','Brightwater','Cobalt Ridge','Dunmore','Elmstead','Fairhaven','Granite Bay','Harlow','Ironvale','Juniper','Kestrel','Lanternside','Marlow','Northgate','Oakhurst','Pinecrest','Quarry Hill','Redfern','Silverton','Thornfield','Umber','Vantage Point','Westmere','Yarrow','Zephyr','Ashbourne','Bellmont','Calder','Draycott','Eastvale','Foxglove','Greywell','Hollis','Ingleby','Jasper Lane','Kingsmead','Lowell','Mosswood','Nettlefield','Orchard Cross','Parkdale','Ravenscar','Stonebridge','Tilbury','Upland','Verity','Wexford','Yewtree'];
+const REGIONS=['North America','North America','North America','Europe','Europe','Asia Pacific'];
+
+function genCompanies(count,R,used){
+  const out=[];
+  while(out.length<count){
+    const sector=R.pick(Object.keys(SECTORS)),p=R.pick(PREFIX),s=R.pick(SECTORS[sector]);
+    const name=`${p} ${s}`;if(used.has(name)||(used.size<PREFIX.length&&used.has(p)))continue;used.add(name);used.add(p);out.push({name,sector});
+  }
+  return out;
+}
+function genHoldings(funds,R,used){
+  const out=[];
+  for(const f of funds.filter(f=>f.strat==='PE')){
+    const nav=f.rows[f.rows.length-1].nav, cos=genCompanies(f.n,R,used);
+    const w=cos.map(()=>R.range(.5,1.6)), ws=w.reduce((s,x)=>s+x,0);
+    cos.forEach((c,k)=>{
+      const fv=nav*.96*w[k]/ws, moic=clamp(Math.exp(Math.log(f.mult)+R.n()*.32),.35,4.6);
+      const yr=Math.min(2026,R.int(f.vintage,f.vintage+3)), sw=c.sector==='Software'||c.sector==='Healthcare';
+      const entry=R.range(8,15)*(sw?1.25:1), cur=entry*clamp(.8+(moic-1)*.18+R.n()*.07,.55,1.7);
+      out.push({id:f.id+'-'+k,fund:f.id,company:c.name,sector:c.sector,region:R.pick(REGIONS),entry:yr,cost:fv/moic,fv,moic,
+        evEbitdaEntry:entry,evEbitdaNow:cur,lev:R.range(2.4,6.4),revG:clamp(R.range(-.04,.12)+(sw?.1:0)+(moic-1)*.05,-.08,.42),
+        ebitdaG:R.u()<.07?null:clamp(R.range(-.1,.2)+(moic-1)*.12,-.25,.55),
+        method:yr>=2026?'Cost':R.pick(['Trading comps','Trading comps','Transaction comps','DCF'])});
+    });
+  }
+  return out;
+}
+function genLoans(funds,R,used){
+  const out=[];
+  for(const f of funds.filter(f=>f.strat==='PC')){
+    const nav=f.rows[f.rows.length-1].nav, cos=genCompanies(f.n,R,used);
+    const w=cos.map(()=>R.range(.5,1.6)), ws=w.reduce((s,x)=>s+x,0);
+    cos.forEach((c,k)=>{
+      let inst,spread=0,fixed=0,pik=0,ltv,lev,cov,price;
+      if(f.sub==='Direct lending'){inst=R.pick(['Unitranche','Unitranche','First-lien term loan','First-lien term loan','Second-lien term loan']);
+        spread=inst==='Second-lien term loan'?R.range(.078,.09):R.range(.047,.066);ltv=R.range(.34,.55);lev=R.range(3.6,6.2);cov=R.range(1.5,3);price=R.range(.965,1.005);pik=R.u()<.12?R.range(.01,.025):0;}
+      else if(f.sub==='Mezzanine'){inst=R.pick(['Mezzanine notes','Subordinated notes']);fixed=R.range(.105,.125);pik=R.range(.02,.045);ltv=R.range(.5,.68);lev=R.range(4.8,6.9);cov=R.range(1.25,2.2);price=R.range(.94,1.0);}
+      else{inst=R.pick(['Special situations term loan','Rescue financing','DIP loan']);spread=R.range(.09,.13);ltv=R.range(.55,.85);lev=R.range(5,8);cov=R.range(.9,1.8);price=R.range(.78,.98);pik=R.u()<.4?R.range(.02,.04):0;}
+      const fv=nav*.97*w[k]/ws, par=fv/price, floating=fixed===0;
+      const cash=floating?BASE_RATE+spread:fixed, wal=3;
+      const yld=cash+pik+(1-price)/4;
+      const score=(ltv-.3)*5+(lev-3)/1.6+(2.4-cov)*.9+(f.sub==='Special situations'?.1:0)+R.n()*.25;
+      let rating=score<1.6?1:score<2.4?2:score<3.3?3:score<4.1?4:5;
+      out.push({score,id:f.id+'-'+k,fund:f.id,borrower:c.name,sector:c.sector,instrument:inst,par,fv,price,floating,spread:floating?spread:null,cash,pik,yld,ltv,lev,cov,
+        maturity:R.int(2027,f.id==='DL3'?2031:2030),rating,hasCert:R.u()>.05});
+    });
+  }
+  // realistic tail: 2 non-accruals, 4 watchlist, everything else rated 1-3
+  const ranked=out.slice().sort((x,y)=>y.score-x.score);
+  ranked.forEach((l,k)=>{l.rating=k<2?5:k<6?4:Math.min(l.rating,3);});
+  // guarantee a realistic tail: one watchlist-grade and one non-accrual name in the stressed fund
+  const ss=out.filter(l=>l.fund==='SS1').sort((a,b)=>b.ltv-a.ltv);
+  if(!out.some(l=>l.rating===5)&&ss[0]){ss[0].rating=5;}
+  if(!out.some(l=>l.rating===4)&&ss[1]){ss[1].rating=4;}
+  for(const l of out){
+    l.status=l.rating===5?'Non-accrual':l.rating===4?'Watchlist':'Performing';
+    if(l.rating>=4){const mark=l.rating===5?R.range(.62,.74):R.range(.86,.93);l.price=Math.min(l.price,mark);l.par=l.fv/l.price;
+      l.yld=l.cash+l.pik+(1-l.price)/4;}
+    if(l.rating===5)l.pikAccrued=true;
+  }
+  return out;
+}
+
+/* ---------- data platform: sources, reconciliation, quality ---------- */
+function genControls(funds,holdings,loans,R){
+  const sla=14;
+  const sources=[
+   {name:'Fund Administrator A',feeds:'Capital accounts, NAV, capital calls',freq:'Quarterly + ad hoc',sla:14,loadedDay:12,records:funds.filter(f=>['BO3','GE1','SE1','DL1','MZ2'].includes(f.id)).length*35,pending:0},
+   {name:'Fund Administrator B',feeds:'Capital accounts, NAV, distributions',freq:'Quarterly + ad hoc',sla:14,loadedDay:17,records:funds.filter(f=>['BO4','GE2','DL2','SS1','DL3'].includes(f.id)).length*35,pending:0},
+   {name:'Loan agent tapes',feeds:'Positions, rates, accruals, covenants',freq:'Monthly',sla:10,loadedDay:8,records:loans.length*3,pending:loans.filter(l=>!l.hasCert).length},
+   {name:'Portfolio monitoring',feeds:'Company KPIs, EBITDA, leverage',freq:'Quarterly',sla:35,loadedDay:33,records:holdings.length*6,pending:holdings.filter(h=>h.ebitdaG==null).length},
+   {name:'General ledger (ERP)',feeds:'Cash, fees, expense accruals',freq:'Daily',sla:10,loadedDay:9,records:4820,pending:0},
+   {name:'Investor register (CRM)',feeds:'LP commitments, contacts, side letters',freq:'Weekly',sla:7,loadedDay:5,records:312,pending:0},
+   {name:'Valuation committee pack',feeds:'Approved fair values, methodology',freq:'Quarterly',sla:30,loadedDay:28,records:holdings.length+loans.length,pending:0},
+   {name:'Market data',feeds:'SOFR curve, FX, index levels',freq:'Daily',sla:2,loadedDay:1,records:1260,pending:0}];
+  for(const s of sources){s.status=s.pending>0?'Partial':s.loadedDay>s.sla?'Late':'On time';}
+  // reconciliation variances (administrator vs platform), injected as realistic breaks
+  const navVar={BO3:.00002,DL1:-.00001,GE1:.00004,MZ2:.00003,SE1:-.00002,BO4:.0012,DL2:-.0031,GE2:.00001,SS1:.00006,DL3:.00002};
+  const cashVar={BO3:0,DL1:0,GE1:.02,MZ2:0,SE1:0,BO4:.35,DL2:0,GE2:0,SS1:.04,DL3:0};
+  const recon=funds.map(f=>{
+    const nav=f.rows[f.rows.length-1].nav,hv=(f.strat==='PE'?holdings:loans).filter(x=>x.fund===f.id).reduce((s,x)=>s+x.fv,0);
+    const other=nav-hv;
+    return{fund:f.id,short:f.short,nav,navVarPct:navVar[f.id],navVarAbs:nav*navVar[f.id],cashVar:cashVar[f.id],positionsPct:other/nav,otherNet:other};
+  });
+  const tol={nav:.0005,cash:.05,pos:.06};
+  for(const r of recon){
+    r.navStatus=Math.abs(r.navVarPct)<=tol.nav?'Pass':Math.abs(r.navVarPct)<=.0025?'Review':'Break';
+    r.cashStatus=Math.abs(r.cashVar)<=tol.cash?'Pass':Math.abs(r.cashVar)<=.5?'Review':'Break';
+    r.posStatus=Math.abs(r.positionsPct)<=tol.pos?'Pass':'Review';
+  }
+  const exceptions=[];
+  const explain={BO4:['Capital call dated 29 Sep booked by administrator on 1 Oct','Cut-off timing','Fund Accounting'],DL2:['Accrued interest on two loans differs from agent tape','Accrual method','Credit Ops']};
+  for(const r of recon){
+    if(r.navStatus!=='Pass')exceptions.push({fund:r.short,check:'NAV: administrator vs platform',variance:`${(r.navVarPct*100).toFixed(2)}% (${r.navVarAbs>=0?'+':'-'}$${Math.abs(r.navVarAbs).toFixed(2)}M)`,status:r.navStatus,cause:(explain[r.fund]||['Under investigation'])[0],owner:(explain[r.fund]||[0,0,'Fund Accounting'])[2],age:explain[r.fund]?3:1});
+    if(r.cashStatus!=='Pass')exceptions.push({fund:r.short,check:'Cash flows: platform vs GL',variance:`$${r.cashVar.toFixed(2)}M`,status:r.cashStatus,cause:r.fund==='BO4'?'Late distribution notice from administrator':'FX rounding on wire',owner:'Treasury',age:r.fund==='BO4'?3:1});
+  }
+  // data quality dimensions, computed from the data above
+  const peReq=holdings.length*4, peMiss=holdings.filter(h=>h.ebitdaG==null).length;
+  const pcReq=loans.length*3, pcMiss=loans.filter(l=>!l.hasCert).length;
+  const completeness=1-(peMiss+pcMiss)/(peReq+pcReq);
+  const valid=loans.filter(l=>l.ltv<=1&&l.rating>=1&&l.rating<=5).length+holdings.filter(h=>h.cost>0&&h.fv>0).length;
+  const validity=valid/(loans.length+holdings.length);
+  const timeliness=sources.filter(s=>s.loadedDay<=s.sla).length/sources.length;
+  const checks=recon.length*3, passed=recon.reduce((s,r)=>s+[r.navStatus,r.cashStatus,r.posStatus].filter(x=>x==='Pass').length,0);
+  const consistency=passed/checks;
+  const quality={completeness,validity,timeliness,consistency,overall:(completeness+validity+timeliness+consistency)/4,checks,passed};
+  return{sources,recon,exceptions,quality,tol};
+}
+
+function generate(seed){
+  const R=makeRand(seed||20261031), used=new Set();
+  const funds=FUND_DEFS.map(d=>simulateFund(d,R));
+  for(const f of funds){f.m=metrics(f.rows);f.age=LAST-f.start;f.unfunded=Math.max(0,f.commit-f.m.pic);
+    f.status=f.age<(f.strat==='PE'?24:f.callQ+8)?'Investing':'Harvesting';}
+  const holdings=genHoldings(funds,R,used), loans=genLoans(funds,R,used);
+  return{funds,holdings,loans,controls:genControls(funds,holdings,loans,R),NQ,LAST,BASE_RATE};
+}
+
+const api={generate,metrics,pooled,pool,xirr,qLabel,qYear,qDate,NQ,LAST,BASE_RATE};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Engine=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+(function(){
+'use strict';
+const E=window.Engine, D=E.generate(20261031);
+const $=(s,r=document)=>r.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmM=v=>Math.abs(v)>=1000?`$${(v/1000).toFixed(2)}B`:`$${v.toFixed(0)}M`, fm1=v=>`$${v.toFixed(1)}M`;
+const fx=v=>v==null?'—':v.toFixed(2)+'x', fp=(v,d=1)=>v==null?'—':(v*100).toFixed(d)+'%', f1=v=>v==null?'—':v.toFixed(1);
+const cv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const FUND=Object.fromEntries(D.funds.map(f=>[f.id,f]));
+const state={tab:'overview',strat:'ALL',fund:'BO3',sort:{},peFund:'ALL',crFund:'ALL'};
+const TABS=[['overview','Overview'],['funds','Funds'],['equity','Private equity'],['credit','Private credit'],['controls','Data & controls'],['implementation','Implementation']];
+let charts=[];
+
+/* ---------- tooltip ---------- */
+const tip=$('#tip');
+function showTip(html,e){tip.innerHTML=html;tip.hidden=false;const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;
+  if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px';}
+const hideTip=()=>{tip.hidden=true;};
+const trow=(c,l,v)=>`<div class="row"><span>${c?`<i style="background:${c}"></i>`:''}${l}</span><span>${v}</span></div>`;
+
+/* ---------- chart helpers ---------- */
+function ticks(min,max,n){const range=(max-min)||1,raw=range/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag;
+  const s=Math.floor(min/step+1e-9)*step,e=Math.ceil(max/step-1e-9)*step,out=[];for(let v=s;v<=e+step/2;v+=step)out.push(Math.abs(v)<1e-9?0:v);return out;}
+const lin=(d0,d1,r0,r1)=>v=>r0+(v-d0)/((d1-d0)||1)*(r1-r0);
+function legend(items){return `<div class="legend">${items.map(i=>`<span><i style="background:${i.color}"></i>${i.name}</span>`).join('')}</div>`;}
+function draw(host,fn){const run=()=>{host.innerHTML='';fn(host.clientWidth||320);};charts.push(run);run();}
+
+/* time series: stacked area, lines, or signed bars */
+function timeChart(host,o){draw(host,W=>{
+  const H=o.h||250,m={l:o.l||50,r:12,t:10,b:24},iw=W-m.l-m.r,ih=H-m.t-m.b,n=o.labels.length,S=o.series;
+  const x=i=>m.l+(o.bars?iw*(i+.5)/n:iw*(n===1?.5:i/(n-1)));
+  let lo=0,hi=0,cum=null;
+  if(o.type==='area'){cum=S.map(()=>new Array(n).fill(0));for(let i=0;i<n;i++){let a=0;S.forEach((s,k)=>{a+=s.values[i];cum[k][i]=a;});hi=Math.max(hi,a);}}
+  else{for(const s of S)for(const v of s.values){hi=Math.max(hi,v);lo=Math.min(lo,v);}}
+  const T=ticks(lo,hi,4),y=lin(T[0],T[T.length-1],m.t+ih,m.t);let g='';
+  for(const t of T){g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(t)}" y2="${y(t)}" stroke="${cv('--grid')}" ${t===0&&lo<0?'stroke-width="1.5" stroke="'+cv('--muted')+'"':''}/><text class="num" x="${m.l-8}" y="${y(t)+4}" text-anchor="end">${o.yfmt(t)}</text>`;}
+  for(let i=0;i<n;i++)if(i%4===0)g+=`<text x="${x(i)}" y="${H-6}" text-anchor="${o.bars?'middle':'middle'}">${E.qYear(i)}</text>`;
+  let body='';
+  if(o.type==='area'){S.forEach((s,k)=>{let d='';for(let i=0;i<n;i++)d+=(i?'L':'M')+x(i)+','+y(cum[k][i]);for(let i=n-1;i>=0;i--)d+='L'+x(i)+','+y(k?cum[k-1][i]:0);
+      body+=`<path d="${d}Z" fill="${s.color}" fill-opacity=".9" stroke="${cv('--surface')}" stroke-width="1.5"/>`;});}
+  else if(o.bars){const bw=Math.max(2,iw/n*.62);S.forEach(s=>{s.values.forEach((v,i)=>{if(!v)return;const y0=y(0),y1=y(v),top=Math.min(y0,y1),h=Math.max(1,Math.abs(y1-y0));
+      body+=`<rect x="${x(i)-bw/2}" y="${top}" width="${bw}" height="${h}" fill="${s.color}" rx="${bw>6?2:0}"/>`;});});}
+  else{S.forEach(s=>{let d='';s.values.forEach((v,i)=>{d+=(i?'L':'M')+x(i)+','+y(v);});body+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const li=n-1;body+=`<circle cx="${x(li)}" cy="${y(s.values[li])}" r="4" fill="${s.color}" stroke="${cv('--surface')}" stroke-width="2"/>`;});}
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(o.aria)}">${g}${body}<g class="hov"></g><rect class="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
+  const svg=host.firstChild,hov=$('.hov',svg),hit=$('.hit',svg);
+  const idxAt=e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)*(W/r.width);return Math.max(0,Math.min(n-1,o.bars?Math.floor((px-m.l)/iw*n):Math.round((px-m.l)/iw*(n-1))));};
+  hit.addEventListener('pointermove',e=>{const i=idxAt(e);let dots='';
+    if(o.type==='area')S.forEach((s,k)=>{dots+=`<circle cx="${x(i)}" cy="${y(cum[k][i])}" r="3.5" fill="${s.color}" stroke="${cv('--surface')}" stroke-width="2"/>`;});
+    else if(!o.bars)S.forEach(s=>{dots+=`<circle cx="${x(i)}" cy="${y(s.values[i])}" r="4" fill="${s.color}" stroke="${cv('--surface')}" stroke-width="2"/>`;});
+    hov.innerHTML=(o.bars?`<rect x="${x(i)-iw/n/2}" y="${m.t}" width="${iw/n}" height="${ih}" fill="${cv('--ink')}" opacity=".06"/>`:`<line x1="${x(i)}" x2="${x(i)}" y1="${m.t}" y2="${m.t+ih}" stroke="${cv('--muted')}" stroke-dasharray="3 3"/>`)+dots;
+    let h=`<div class="t">${o.labels[i]}</div>`;S.forEach(s=>{h+=trow(s.color,s.name,o.yfmt(s.values[i],true));});if(o.type==='area')h+=trow('','Total',o.yfmt(cum[S.length-1][i],true));
+    if(o.extra)h+=o.extra(i);showTip(h,e);});
+  hit.addEventListener('pointerleave',()=>{hov.innerHTML='';hideTip();});
+});}
+
+/* horizontal bars: simple or stacked parts, optional reference line */
+function hBars(host,o){draw(host,W=>{
+  const rowH=o.rowH||30,H=o.rows.length*rowH+24,m={l:o.l||120,r:o.r||56,t:o.ref!=null?16:4,b:20},iw=W-m.l-m.r,H2=H+(o.ref!=null?12:0);
+  const maxV=Math.max(o.max||0,...o.rows.map(r=>r.parts.reduce((s,p)=>s+p.v,0)));const T=ticks(0,maxV,Math.max(2,Math.min(4,Math.floor(iw/90)))),x=lin(0,T[T.length-1],m.l,m.l+iw);let g='';
+  for(const t of T)g+=`<line x1="${x(t)}" x2="${x(t)}" y1="${m.t}" y2="${H-m.b}" stroke="${cv('--grid')}"/><text class="num" x="${x(t)}" y="${H-5}" text-anchor="middle">${o.xfmt(t)}</text>`;
+  let body='';o.rows.forEach((r,i)=>{const cy=m.t+i*rowH+rowH/2,bh=Math.min(16,rowH-10);let acc=0;
+    body+=`<text class="lbl" x="${m.l-10}" y="${cy+4}" text-anchor="end">${esc(r.label.length>(o.maxLen||20)?r.label.slice(0,(o.maxLen||20)-1)+'…':r.label)}</text>`;
+    r.parts.forEach((p,k)=>{const x0=x(acc),x1=x(acc+p.v);acc+=p.v;const last=k===r.parts.length-1;
+      body+=`<rect x="${x0+(k?1:0)}" y="${cy-bh/2}" width="${Math.max(0,x1-x0-(k?1:0))}" height="${bh}" fill="${p.color}" ${last?`rx="3"`:''}/>`;});
+    body+=`<text class="val" x="${x(acc)+7}" y="${cy+4}">${r.text}</text>`;});
+  if(o.ref!=null)body+=`<line x1="${x(o.ref)}" x2="${x(o.ref)}" y1="${m.t}" y2="${H-m.b}" stroke="${cv('--ink')}" stroke-dasharray="4 3"/><text x="${x(o.ref)}" y="${m.t-5}" text-anchor="middle" class="lbl">${o.refLabel}</text>`;
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H2}" width="${W}" height="${H2}" role="img" aria-label="${esc(o.aria)}">${g}${body}<g class="hit"></g></svg>`;
+  const svg=host.firstChild;
+  o.rows.forEach((r,i)=>{const rc=document.createElementNS('http://www.w3.org/2000/svg','rect');rc.setAttribute('x',0);rc.setAttribute('y',m.t+i*rowH);rc.setAttribute('width',W);rc.setAttribute('height',rowH);rc.setAttribute('fill','transparent');
+    rc.addEventListener('pointermove',e=>showTip(`<div class="t">${esc(r.label)}</div>`+r.parts.map(p=>trow(p.color,p.name,p.fmt)).join('')+(r.tipExtra||''),e));rc.addEventListener('pointerleave',hideTip);$('.hit',svg).appendChild(rc);});
+});}
+
+/* vertical columns */
+function vBars(host,o){draw(host,W=>{
+  const H=o.h||220,m={l:46,r:8,t:12,b:34},iw=W-m.l-m.r,ih=H-m.t-m.b,n=o.cats.length;
+  const T=ticks(0,Math.max(...o.cats.map(c=>c.v)),4),y=lin(0,T[T.length-1],m.t+ih,m.t);let g='';
+  for(const t of T)g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(t)}" y2="${y(t)}" stroke="${cv('--grid')}"/><text class="num" x="${m.l-8}" y="${y(t)+4}" text-anchor="end">${o.yfmt(t)}</text>`;
+  const band=iw/n,bw=Math.min(44,band*.62);let body='';
+  o.cats.forEach((c,i)=>{const cx=m.l+band*(i+.5),h=Math.max(0,m.t+ih-y(c.v));
+    body+=`<rect x="${cx-bw/2}" y="${y(c.v)}" width="${bw}" height="${h}" rx="3" fill="${c.color||cv('--blue')}"/><text class="lbl" x="${cx}" y="${H-16}" text-anchor="middle">${esc(c.label)}</text>${c.sub?`<text x="${cx}" y="${H-4}" text-anchor="middle">${esc(c.sub)}</text>`:''}<text class="val" x="${cx}" y="${y(c.v)-5}" text-anchor="middle">${o.vfmt?o.vfmt(c.v):''}</text>`;});
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(o.aria)}">${g}${body}<g class="hit"></g></svg>`;
+  const svg=host.firstChild;o.cats.forEach((c,i)=>{const rc=document.createElementNS('http://www.w3.org/2000/svg','rect');rc.setAttribute('x',m.l+band*i);rc.setAttribute('y',m.t);rc.setAttribute('width',band);rc.setAttribute('height',ih+20);rc.setAttribute('fill','transparent');
+    rc.addEventListener('pointermove',e=>showTip(`<div class="t">${esc(c.label)}</div>`+trow(c.color||cv('--blue'),o.name,o.tfmt(c.v))+(c.tip||''),e));rc.addEventListener('pointerleave',hideTip);$('.hit',svg).appendChild(rc);});
+});}
+
+/* ---------- sortable table ---------- */
+function table(host,id,cols,rows,o={}){
+  const st=state.sort[id]||(state.sort[id]=o.sort||null);
+  let data=rows.slice();
+  if(st){const c=cols.find(c=>c.key===st.key),val=r=>c.val?c.val(r):r[c.key];data.sort((a,b)=>{const x=val(a),y=val(b);if(x==null)return 1;if(y==null)return -1;return (typeof x==='string'?x.localeCompare(y):x-y)*st.dir;});}
+  host.innerHTML=`<div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th class="${c.r?'r':''}" data-k="${c.key}" tabindex="0" aria-sort="${st&&st.key===c.key?(st.dir>0?'ascending':'descending'):'none'}">${c.label}<span class="ar">${st&&st.key===c.key?(st.dir>0?'↑':'↓'):''}</span></th>`).join('')}</tr></thead><tbody>${
+    data.map(r=>`<tr class="${o.onRow?'click':''} ${o.sel&&o.sel(r)?'sel':''}" ${o.onRow?`tabindex="0" data-id="${o.key(r)}"`:''}>${cols.map(c=>`<td class="${c.r?'r num':''} ${c.cls||''}">${c.fmt?c.fmt(r[c.key],r):esc(r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  const sortBy=k=>{const c=cols.find(c=>c.key===k);const cur=state.sort[id];state.sort[id]={key:k,dir:cur&&cur.key===k?-cur.dir:(c.r?-1:1)};table(host,id,cols,rows,o);};
+  host.querySelectorAll('th').forEach(th=>{th.onclick=()=>sortBy(th.dataset.k);th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sortBy(th.dataset.k);}};});
+  if(o.onRow)host.querySelectorAll('tbody tr').forEach(tr=>{const go=()=>o.onRow(tr.dataset.id);tr.onclick=go;tr.onkeydown=e=>{if(e.key==='Enter'){go();}};});
+}
+const pill=(label,cls,glyph)=>`<span class="pill ${cls}">${glyph||''} ${label}</span>`;
+const statusPill=s=>({'Pass':pill('Pass','good','●'),'On time':pill('On time','good','●'),'Performing':pill('Performing','good','●'),'Review':pill('Review','warn','▲'),'Late':pill('Late','warn','▲'),'Partial':pill('Partial','warn','▲'),'Watchlist':pill('Watchlist','warn','▲'),'Break':pill('Break','bad','■'),'Non-accrual':pill('Non-accrual','bad','■'),'Below cost':pill('Below cost','warn','▲'),'Held':pill('Held','neutral','')}[s]||pill(s,'neutral'));
+const kpi=(l,v,d)=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d||'&nbsp;'}</div></div>`;
+const delta=(a,b,fmt,inv)=>{const d=a-b;const up=d>=0;return `<span class="${(up!==!!inv)?'up':'dn'}">${up?'▲':'▼'} ${fmt(Math.abs(d))}</span>`;};
+const segBtns=(cur,opts,attr)=>`<div class="seg" role="group">${opts.map(([k,l])=>`<button type="button" data-${attr}="${k}" aria-pressed="${cur===k}">${l}</button>`).join('')}</div>`;
+const inStrat=f=>state.strat==='ALL'||f.strat===state.strat;
+
+/* ---------- views ---------- */
+function overview(){
+  const F=D.funds.filter(inStrat),P=E.pooled(F),Pp=E.pooled(F,E.LAST-1),Pq=E.pooled(F,E.LAST-4);
+  const commit=F.reduce((s,f)=>s+f.commit,0),unf=F.reduce((s,f)=>s+f.unfunded,0);
+  const pool=E.pool(F).rows,rowAt=i=>pool.find(r=>r.i===i)||{call:0,dist:0,nav:0};
+  const L4=[0,1,2,3].map(k=>rowAt(E.LAST-k)),dist4=L4.reduce((s,r)=>s+r.dist,0),call4=L4.reduce((s,r)=>s+r.call,0);
+  const navFy=F.reduce((s,f)=>s+f.m.nav,0),peNav=D.funds.filter(f=>f.strat==='PE').reduce((s,f)=>s+f.m.nav,0),pcNav=D.funds.filter(f=>f.strat==='PC').reduce((s,f)=>s+f.m.nav,0);
+  const above=F.filter(f=>f.m.irr>=.12).length,lo=F.slice().sort((a,b)=>a.m.irr-b.m.irr)[0],hiF=F.slice().sort((a,b)=>b.m.irr-a.m.irr)[0];
+  const loans=D.loans.filter(l=>state.strat!=='PE'),bad=loans.filter(l=>l.rating>=4),badPar=bad.reduce((s,l)=>s+l.par,0),par=loans.reduce((s,l)=>s+l.par,0);
+  const labels=pool.map(r=>E.qLabel(r.i));
+  const css=cv('--blue'),co=cv('--orange'),ca=cv('--aqua');
+  const html=`
+   <div class="toolbar"><div><h2>Portfolio summary</h2><p class="lede">${F.length} funds consolidated from two administrators, loan-agent tapes and the general ledger. Net of simulated fees.</p></div>
+     ${segBtns(state.strat,[['ALL','All funds'],['PE','Private equity'],['PC','Private credit']],'strat')}</div>
+   <section class="kpis" aria-label="Key metrics">
+     ${kpi('Net asset value',fmM(P.nav),delta(P.nav,Pp.nav,fmM)+' QoQ')}
+     ${kpi('Commitments',fmM(commit),fmM(unf)+' unfunded')}
+     ${kpi('Paid-in',fmM(P.pic),fp(P.pic/commit,0)+' of commitments')}
+     ${kpi('Distributions',fmM(P.dist),fmM(dist4)+' last 4 qtrs')}
+     ${kpi('Net TVPI',fx(P.tvpi),delta(P.tvpi,Pq.tvpi,v=>v.toFixed(2)+'x')+' YoY')}
+     ${kpi('DPI',fx(P.dpi),'RVPI '+fx(P.rvpi))}
+     ${kpi('Net IRR',fp(P.irr),delta(P.irr,Pq.irr,v=>(v*100).toFixed(1)+' pts')+' YoY')}
+   </section>
+   <div class="grid g2">
+     <div class="card"><h3>Net asset value by strategy</h3>${legend([{name:'Private equity',color:css},{name:'Private credit',color:ca}])}<div class="chart" id="c-nav"></div></div>
+     <div class="card"><h3>Quarterly cash flows</h3>${legend([{name:'Distributions',color:css},{name:'Contributions',color:co}])}<div class="chart" id="c-cf"></div></div>
+   </div>
+   <div class="grid g2">
+     <div class="card"><h3>TVPI by fund</h3>${legend([{name:'DPI (realised)',color:css},{name:'RVPI (unrealised)',color:cv('--blue-tint')}])}<div class="chart" id="c-tvpi"></div></div>
+     <div class="card"><h3>Net IRR by fund</h3><div class="legend"><span>Dashed line marks the 12% target net IRR</span></div><div class="chart" id="c-irr"></div></div>
+   </div>
+   <div class="card"><h3>Management commentary</h3><ul class="commentary">
+     <li>Pooled net IRR is <b>${fp(P.irr)}</b> on <b>${fmM(P.nav)}</b> of NAV; <b>${above} of ${F.length}</b> funds are at or above the 12% target. Strongest: <b>${hiF.short}</b> (${fp(hiF.m.irr)}). Weakest: <b>${lo.short}</b> (${fp(lo.m.irr)}).</li>
+     <li>Over the last four quarters the portfolio called <b>${fmM(call4)}</b> and returned <b>${fmM(dist4)}</b>, a net ${dist4>=call4?'inflow':'outflow'} of <b>${fmM(Math.abs(dist4-call4))}</b>.</li>
+     ${state.strat!=='PE'?`<li>Credit watchlist and non-accrual positions total <b>${bad.length} loans</b>, or <b>${fp(badPar/par)}</b> of par. All sit in the Special Situations fund.</li>`:''}
+     <li>Two administrator reconciliation items are open at quarter-end (Buyout IV, Direct Lending II). See Data &amp; controls.</li></ul></div>`;
+  view(html);
+  timeChart($('#c-nav'),{labels,type:'area',series:[{name:'Private equity',color:css,values:pool.map((r,k)=>navOf(r.i,'PE'))},{name:'Private credit',color:ca,values:pool.map(r=>navOf(r.i,'PC'))}].filter(s=>state.strat==='ALL'||(state.strat==='PE')===(s.name==='Private equity')),yfmt:v=>fmM(v),aria:'Net asset value by strategy over time'});
+  timeChart($('#c-cf'),{labels,bars:true,series:[{name:'Distributions',color:css,values:pool.map(r=>r.dist)},{name:'Contributions',color:co,values:pool.map(r=>-r.call)}],yfmt:(v,t)=>t?fm1(Math.abs(v)):fmM(v),aria:'Quarterly contributions and distributions',
+     extra:i=>trow('','Net',fm1(pool[i].dist-pool[i].call))});
+  const byT=F.slice().sort((a,b)=>b.m.tvpi-a.m.tvpi);
+  hBars($('#c-tvpi'),{aria:'DPI and RVPI by fund',l:112,rows:byT.map(f=>({label:f.short,parts:[{v:f.m.dpi,color:css,name:'DPI',fmt:fx(f.m.dpi)},{v:f.m.rvpi,color:cv('--blue-tint'),name:'RVPI',fmt:fx(f.m.rvpi)}],text:fx(f.m.tvpi),tipExtra:trow('','TVPI',fx(f.m.tvpi))})),xfmt:v=>v.toFixed(1)+'x'});
+  const byI=F.slice().sort((a,b)=>b.m.irr-a.m.irr);
+  hBars($('#c-irr'),{aria:'Net IRR by fund',l:112,max:.16,ref:.12,refLabel:'12% target',rows:byI.map(f=>({label:f.short,parts:[{v:Math.max(0,f.m.irr),color:f.m.irr>=.12?css:cv('--orange'),name:'Net IRR',fmt:fp(f.m.irr)}],text:fp(f.m.irr)})),xfmt:v=>(v*100).toFixed(0)+'%'});
+  bindStrat();
+}
+function navOf(i,s){return D.funds.filter(f=>f.strat===s).reduce((a,f)=>{const r=f.rows.find(r=>r.i===i);return a+(r?r.nav:0);},0);}
+
+function funds(){
+  const F=D.funds.filter(inStrat);if(!F.find(f=>f.id===state.fund))state.fund=F[0].id;
+  view(`<div class="toolbar"><div><h2>Fund performance</h2><p class="lede">Select a fund to see its J-curve. Click a column header to sort.</p></div>${segBtns(state.strat,[['ALL','All funds'],['PE','Private equity'],['PC','Private credit']],'strat')}</div>
+   <div class="card" style="margin-bottom:16px"><div id="t-funds"></div></div>
+   <div class="grid g2" id="detail"></div>`);
+  const cols=[{key:'short',label:'Fund',cls:'',fmt:(v,r)=>`<b>${esc(v)}</b>`},{key:'sub',label:'Strategy'},{key:'vintage',label:'Vintage',r:1},{key:'status',label:'Stage',fmt:v=>pill(v,'neutral')},
+   {key:'commit',label:'Commitment',r:1,fmt:v=>fm1(v)},{key:'pic',label:'Paid-in',r:1,val:r=>r.m.pic,fmt:(v,r)=>fm1(r.m.pic)},{key:'dist',label:'Distributed',r:1,val:r=>r.m.dist,fmt:(v,r)=>fm1(r.m.dist)},{key:'nav',label:'NAV',r:1,val:r=>r.m.nav,fmt:(v,r)=>fm1(r.m.nav)},
+   {key:'dpi',label:'DPI',r:1,val:r=>r.m.dpi,fmt:(v,r)=>fx(r.m.dpi)},{key:'rvpi',label:'RVPI',r:1,val:r=>r.m.rvpi,fmt:(v,r)=>fx(r.m.rvpi)},{key:'tvpi',label:'TVPI',r:1,val:r=>r.m.tvpi,fmt:(v,r)=>`<b>${fx(r.m.tvpi)}</b>`},{key:'irr',label:'Net IRR',r:1,val:r=>r.m.irr,fmt:(v,r)=>`<b>${fp(r.m.irr)}</b>`}];
+  const detail=()=>{const f=FUND[state.fund],rows=f.rows;let cum=0;const net=rows.map(r=>(cum+=r.dist-r.call));const val=rows.map((r,k)=>net[k]+r.nav);
+    const labels=rows.map(r=>E.qLabel(r.i));const cnt=(f.strat==='PE'?D.holdings:D.loans).filter(x=>x.fund===f.id).length;
+    $('#detail').innerHTML=`<div class="card"><h2>${esc(f.name)}</h2><p class="lede">${f.sub} · ${f.vintage} vintage · ${f.status.toLowerCase()} · ${cnt} ${f.strat==='PE'?'portfolio companies':'loans'}</p>
+      <div class="kpis" style="margin:12px 0 0;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">${kpi('Unfunded',fm1(f.unfunded))}${kpi('TVPI',fx(f.m.tvpi))}${kpi('Net IRR',fp(f.m.irr))}${kpi('DPI',fx(f.m.dpi))}</div></div>
+      <div class="card"><h3>J-curve, ${esc(f.short)}</h3>${legend([{name:'Cumulative net cash flow',color:cv('--orange')},{name:'Net cash flow + NAV (total value)',color:cv('--blue')}])}<div class="chart" id="c-j"></div></div>`;
+    timeChart($('#c-j'),{labels,series:[{name:'Cumulative net cash flow',color:cv('--orange'),values:net},{name:'Total value',color:cv('--blue'),values:val}],yfmt:(v,t)=>t?fm1(v):fmM(v),aria:'J-curve for selected fund',h:230});};
+  const drawTable=()=>table($('#t-funds'),'funds',cols,F,{sort:{key:'irr',dir:-1},onRow:id=>{state.fund=id;drawTable();detail();},key:r=>r.id,sel:r=>r.id===state.fund});
+  drawTable();
+  detail();bindStrat();
+}
+
+function equity(){
+  const H=D.holdings.filter(h=>state.peFund==='ALL'||h.fund===state.peFund);
+  const fv=H.reduce((s,h)=>s+h.fv,0),cost=H.reduce((s,h)=>s+h.cost,0),below=H.filter(h=>h.moic<1).length;
+  const wl=(k)=>{const a=H.filter(h=>h[k]!=null);return a.reduce((s,h)=>s+h[k]*h.fv,0)/a.reduce((s,h)=>s+h.fv,0);};
+  const sect={};H.forEach(h=>sect[h.sector]=(sect[h.sector]||0)+h.fv);
+  const sectRows=Object.entries(sect).sort((a,b)=>b[1]-a[1]);
+  const B=[['< 1.0x',0,1],['1.0–1.5x',1,1.5],['1.5–2.0x',1.5,2],['2.0x +',2,99]].map(([l,a,b])=>({label:l,v:H.filter(h=>h.moic>=a&&h.moic<b).reduce((s,h)=>s+h.fv,0),n:H.filter(h=>h.moic>=a&&h.moic<b).length}));
+  view(`<div class="toolbar"><div><h2>Private equity holdings</h2><p class="lede">Company-level fair values from the valuation committee, reconciled to fund NAV.</p></div>
+    <label class="sub">Fund <select id="sel-fund"><option value="ALL">All equity funds</option>${D.funds.filter(f=>f.strat==='PE').map(f=>`<option value="${f.id}" ${f.id===state.peFund?'selected':''}>${f.short}</option>`).join('')}</select></label></div>
+   <section class="kpis">${kpi('Companies',H.length,'positions')}${kpi('Fair value',fmM(fv),'Cost '+fmM(cost))}${kpi('Gross MOIC',fx(fv/cost),'Unrealised, weighted')}${kpi('EV / EBITDA',f1(wl('evEbitdaNow'))+'x','Entry '+f1(wl('evEbitdaEntry'))+'x')}${kpi('Net debt / EBITDA',f1(wl('lev'))+'x','FV-weighted')}${kpi('Below cost',below,fp(H.filter(h=>h.moic<1).reduce((s,h)=>s+h.fv,0)/fv,0)+' of fair value')}</section>
+   <div class="grid g2"><div class="card"><h3>Fair value by sector</h3><div class="chart" id="c-sec"></div></div><div class="card"><h3>Fair value by MOIC bucket</h3><div class="chart" id="c-moic"></div></div></div>
+   <div class="card"><div id="t-pe"></div></div>`);
+  hBars($('#c-sec'),{aria:'Fair value by sector',l:120,rows:sectRows.map(([s,v])=>({label:s,parts:[{v,color:cv('--blue'),name:'Fair value',fmt:fmM(v)}],text:fmM(v)})),xfmt:v=>fmM(v)});
+  vBars($('#c-moic'),{aria:'Fair value by MOIC bucket',name:'Fair value',cats:B.map((b,i)=>({label:b.label,sub:b.n+' cos',v:b.v,color:i===0?cv('--orange'):cv('--blue'),tip:trow('','Companies',b.n)})),yfmt:v=>fmM(v),vfmt:v=>v?fmM(v):'',tfmt:v=>fm1(v)});
+  const cols=[{key:'company',label:'Company',fmt:v=>`<b>${esc(v)}</b>`},{key:'fund',label:'Fund',fmt:v=>`<span class="tag">${v}</span>`},{key:'sector',label:'Sector'},{key:'region',label:'Region'},{key:'entry',label:'Entry',r:1},
+   {key:'cost',label:'Cost',r:1,fmt:fm1},{key:'fv',label:'Fair value',r:1,fmt:fm1},{key:'moic',label:'MOIC',r:1,fmt:(v)=>`<b>${fx(v)}</b>`},{key:'evEbitdaNow',label:'EV/EBITDA',r:1,fmt:v=>f1(v)+'x'},{key:'lev',label:'ND/EBITDA',r:1,fmt:v=>f1(v)+'x'},
+   {key:'revG',label:'Rev. growth',r:1,fmt:v=>fp(v)},{key:'ebitdaG',label:'EBITDA growth',r:1,fmt:v=>v==null?'<span class="muted">pending</span>':fp(v)},{key:'method',label:'Valuation'},{key:'st',label:'Flag',val:r=>r.moic,fmt:(v,r)=>r.moic<1?statusPill('Below cost'):''}];
+  table($('#t-pe'),'pe',cols,H,{sort:{key:'fv',dir:-1}});
+  $('#sel-fund').onchange=e=>{state.peFund=e.target.value;render();};
+}
+
+function credit(){
+  const L=D.loans.filter(l=>state.crFund==='ALL'||l.fund===state.crFund),perf=L.filter(l=>l.rating<5);
+  const wf=(k,a=perf)=>a.reduce((s,l)=>s+l[k]*l.fv,0)/a.reduce((s,l)=>s+l.fv,0);
+  const par=L.reduce((s,l)=>s+l.par,0),fv=L.reduce((s,l)=>s+l.fv,0),flt=L.filter(l=>l.floating).reduce((s,l)=>s+l.par,0),pik=L.filter(l=>l.pik>0).reduce((s,l)=>s+l.par,0),wl=L.filter(l=>l.rating>=4).reduce((s,l)=>s+l.par,0);
+  const rat=[1,2,3,4,5].map(r=>({label:'Rating '+r,sub:['Strong','Good','Satisfactory','Watch','Impaired'][r-1],v:L.filter(l=>l.rating===r).reduce((s,l)=>s+l.par,0),n:L.filter(l=>l.rating===r).length}));
+  const yrs=[...new Set(L.map(l=>l.maturity))].sort();const inst={};L.forEach(l=>inst[l.instrument]=(inst[l.instrument]||0)+l.par);
+  view(`<div class="toolbar"><div><h2>Private credit book</h2><p class="lede">Loan-level tape from the agent, with internal risk ratings. Yield excludes non-accrual loans.</p></div>
+    <label class="sub">Fund <select id="sel-fund"><option value="ALL">All credit funds</option>${D.funds.filter(f=>f.strat==='PC').map(f=>`<option value="${f.id}" ${f.id===state.crFund?'selected':''}>${f.short}</option>`).join('')}</select></label></div>
+   <section class="kpis">${kpi('Par outstanding',fmM(par),L.length+' loans · FV '+fmM(fv))}${kpi('Wtd. avg yield',fp(wf('yld')),'Cash + PIK + discount')}${kpi('Wtd. avg spread',Math.round(wf('spread',perf.filter(l=>l.floating))*10000)+' bps','Over SOFR 3.75%')}${kpi('Avg LTV',fp(wf('ltv'),0),'Leverage '+f1(wf('lev'))+'x')}${kpi('Floating rate',fp(flt/par,0),'of par')}${kpi('PIK exposure',fp(pik/par,0),'of par')}${kpi('Watch + non-accrual',fp(wl/par,1),L.filter(l=>l.rating>=4).length+' loans')}</section>
+   <div class="grid g3">
+    <div class="card"><h3>Par by internal rating</h3><div class="chart" id="c-rat"></div></div>
+    <div class="card"><h3>Maturity ladder</h3><div class="chart" id="c-mat"></div></div>
+    <div class="card"><h3>Par by instrument</h3><div class="chart" id="c-inst"></div></div></div>
+   <div class="card"><div id="t-cr"></div></div>`);
+  vBars($('#c-rat'),{aria:'Par by rating',name:'Par',cats:rat.map((r,i)=>({label:'R'+r.label.slice(-1),sub:r.sub,v:r.v,color:i>=3?cv('--orange'):cv('--blue'),tip:trow('','Loans',r.n)})),yfmt:fmM,vfmt:v=>v?fmM(v):'',tfmt:fm1,h:230});
+  vBars($('#c-mat'),{aria:'Par by maturity year',name:'Par',cats:yrs.map(y=>({label:String(y),v:L.filter(l=>l.maturity===y).reduce((s,l)=>s+l.par,0),tip:trow('','Loans',L.filter(l=>l.maturity===y).length)})),yfmt:fmM,vfmt:v=>v?fmM(v):'',tfmt:fm1,h:230});
+  hBars($('#c-inst'),{aria:'Par by instrument',l:112,maxLen:16,rowH:34,rows:Object.entries(inst).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({label:k,parts:[{v,color:cv('--blue'),name:'Par',fmt:fm1(v)}],text:fmM(v)})),xfmt:fmM});
+  const cols=[{key:'borrower',label:'Borrower',fmt:v=>`<b>${esc(v)}</b>`},{key:'fund',label:'Fund',fmt:v=>`<span class="tag">${v}</span>`},{key:'instrument',label:'Instrument'},{key:'par',label:'Par',r:1,fmt:fm1},{key:'price',label:'Price',r:1,fmt:v=>(v*100).toFixed(1)},
+   {key:'cash',label:'Coupon',r:1,fmt:(v,r)=>r.floating?`S+${Math.round(r.spread*10000)}`:fp(v)},{key:'pik',label:'PIK',r:1,fmt:v=>v?fp(v):'—'},{key:'yld',label:'Yield',r:1,fmt:(v,r)=>r.rating===5?'<span class="muted">n/a</span>':`<b>${fp(v)}</b>`},{key:'ltv',label:'LTV',r:1,fmt:v=>fp(v,0)},{key:'lev',label:'Leverage',r:1,fmt:v=>f1(v)+'x'},{key:'cov',label:'Int. cover',r:1,fmt:v=>f1(v)+'x'},
+   {key:'maturity',label:'Maturity',r:1},{key:'rating',label:'Rating',r:1},{key:'status',label:'Status',fmt:v=>statusPill(v)}];
+  table($('#t-cr'),'cr',cols,L,{sort:{key:'rating',dir:-1}});
+  $('#sel-fund').onchange=e=>{state.crFund=e.target.value;render();};
+}
+
+function controls(){
+  const C=D.controls,Q=C.quality;
+  const dims=[['Completeness','Required fields populated',Q.completeness],['Validity','Values within allowed ranges',Q.validity],['Timeliness','Feeds loaded within SLA',Q.timeliness],['Consistency','Reconciliation checks passed',Q.consistency]];
+  view(`<div class="toolbar"><div><h2>Data &amp; controls</h2><p class="lede">What the platform checks before numbers reach management. Every figure on the other tabs passes through these steps.</p></div></div>
+   <section class="kpis">${kpi('Data quality score',fp(Q.overall,0),'Average of 4 dimensions')}${kpi('Recon checks passed',Q.passed+' / '+Q.checks,'Tolerance: NAV 0.05%')}${kpi('Open exceptions',C.exceptions.length,C.exceptions.filter(e=>e.status==='Break').length+' break, '+C.exceptions.filter(e=>e.status==='Review').length+' review')}${kpi('Sources loaded',C.sources.filter(s=>s.status==='On time').length+' / '+C.sources.length,'on time')}</section>
+   <div class="card" style="margin-bottom:16px"><h3>Quality by dimension</h3><div style="display:grid;gap:18px 32px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">${dims.map(([n,d,v])=>`<div><div style="display:flex;justify-content:space-between;gap:12px"><b>${n}</b><span class="num" style="font-family:var(--f-mono)">${fp(v)}</span></div><div class="bar-score"><div class="track"><div class="fill" style="width:${(v*100).toFixed(1)}%"></div></div></div><div class="sub">${d}</div></div>`).join('')}</div></div>
+   <div class="card" style="margin-bottom:16px"><h3>Open exceptions</h3><div id="t-ex"></div></div>
+   <div class="card" style="margin-bottom:16px"><h3>Source systems · Q3 close</h3><div id="t-src"></div></div>
+   <div class="card"><h3>Reconciliation matrix</h3><p class="note" style="margin:0 0 8px">Pass means inside tolerance. Review is a small difference with a known cause. Break needs sign-off before reporting.</p><div id="t-rec"></div></div>`);
+  table($('#t-ex'),'ex',[{key:'fund',label:'Fund',fmt:v=>`<b>${v}</b>`},{key:'check',label:'Check'},{key:'variance',label:'Variance',r:1,cls:'num'},{key:'status',label:'Status',fmt:statusPill},{key:'cause',label:'Likely cause',cls:'wrap'},{key:'owner',label:'Owner'},{key:'age',label:'Age (d)',r:1}],C.exceptions);
+  table($('#t-src'),'src',[{key:'name',label:'System',fmt:v=>`<b>${v}</b>`},{key:'feeds',label:'Feeds',cls:'wrap'},{key:'freq',label:'Frequency'},{key:'loadedDay',label:'Loaded',r:1,fmt:v=>'T+'+v},{key:'sla',label:'SLA',r:1,fmt:v=>'T+'+v},{key:'records',label:'Records',r:1,fmt:v=>v.toLocaleString('en-US')},{key:'pending',label:'Pending',r:1,fmt:v=>v||'—'},{key:'status',label:'Status',fmt:statusPill}],C.sources);
+  table($('#t-rec'),'rec',[{key:'short',label:'Fund',fmt:v=>`<b>${v}</b>`},{key:'nav',label:'Platform NAV',r:1,fmt:fm1},{key:'navVarPct',label:'Admin NAV var.',r:1,fmt:v=>(v*100).toFixed(3)+'%'},{key:'navStatus',label:'NAV',fmt:statusPill},{key:'cashVar',label:'Cash vs GL',r:1,fmt:v=>fm1(v)},{key:'cashStatus',label:'Cash',fmt:statusPill},{key:'positionsPct',label:'Other net assets',r:1,fmt:v=>fp(v)},{key:'posStatus',label:'Positions',fmt:statusPill}],C.recon);
+}
+
+function implementation(){
+  view(`<div class="toolbar"><div><h2>Implementation</h2><p class="lede">How this reporting solution is built and rolled out for an alternative investment manager: sources, controls, calculations, delivery.</p></div></div>
+   <div class="card" style="margin-bottom:16px"><h3>Data flow</h3><div class="flow">
+     <div><em>1 · Sources</em><b>Administrators, loan agent, GL, CRM</b><span>Files, APIs and SFTP drops. Each feed has an owner and an SLA.</span></div>
+     <div><em>2 · Staging</em><b>Raw landing zone</b><span>Untouched copies with load time and file hash for audit.</span></div>
+     <div><em>3 · Validation</em><b>Rules and reconciliation</b><span>Schema, range and tie-out checks. Breaks route to an owner.</span></div>
+     <div><em>4 · Calculation</em><b>Performance engine</b><span>IRR, TVPI, DPI, RVPI and credit metrics from dated cash flows and positions.</span></div>
+     <div><em>5 · Data mart</em><b>Star schema</b><span><span class="code">dim_fund</span> <span class="code">dim_asset</span> <span class="code">fact_cashflow</span> <span class="code">fact_valuation</span> <span class="code">fact_loan_tape</span></span></div>
+     <div><em>6 · Delivery</em><b>Dashboard and LP reports</b><span>Management view, quarterly LP pack and ad hoc exports.</span></div></div></div>
+   <div class="grid g2">
+    <div class="card"><h3>Metric definitions</h3><dl class="defs">
+      <dt>Net IRR</dt><dd>Annualised rate that sets the net present value of dated contributions, distributions and closing NAV to zero (XIRR, quarter-end dates).</dd>
+      <dt>TVPI</dt><dd><span class="code">(Distributions + NAV) / Paid-in</span></dd>
+      <dt>DPI</dt><dd><span class="code">Distributions / Paid-in</span>. Cash returned to investors.</dd>
+      <dt>RVPI</dt><dd><span class="code">NAV / Paid-in</span>. Value still held.</dd>
+      <dt>Pooled metrics</dt><dd>Fund cash flows are summed by date before calculating, never averaged across funds.</dd>
+      <dt>Credit yield</dt><dd>Cash coupon plus PIK plus discount to par spread over 4 years, weighted by fair value. Non-accrual loans excluded.</dd>
+      <dt>LTV, leverage</dt><dd>Debt through our tranche over enterprise value, and over EBITDA.</dd>
+      <dt>Risk rating</dt><dd>1 to 5 from LTV, leverage and interest cover. 4 is watchlist, 5 is non-accrual.</dd></dl></div>
+    <div class="card"><h3>Rollout plan</h3><ul class="tl">
+      ${[['Wks 1–2','Discovery and data inventory','Map sources, owners, fields and the current quarter-end process.','Complete'],['Wks 3–5','Data model and ingestion','Staging layer, star schema, administrator and loan tape loaders.','Complete'],['Wks 6–8','Validation and reconciliation','Rules library, tolerances, exception workflow with named owners.','Complete'],['Wks 9–11','Calculation engine and testing','Metrics tied to administrator figures for three prior quarters.','In progress'],['Wks 12–13','Dashboard, UAT and training','Management and finance sign-off, runbook, parallel run.','Planned'],['Wk 14','Go-live and handover','Q4 close on the platform. Legacy spreadsheets retired.','Planned']].map(([w,t,d,s])=>`<li><span class="w">${w}</span><div><b>${t}</b><span class="d">${d}</span></div>${pill(s,s==='Complete'?'good':s==='In progress'?'warn':'neutral',s==='Complete'?'●':s==='In progress'?'▲':'')}</li>`).join('')}</ul></div></div>
+   <div class="card"><h3>Quarter-end controls the platform runs</h3><ul class="commentary">
+     <li><b>Completeness:</b> every fund has a capital account, NAV and position file before calculation starts.</li>
+     <li><b>Tie-out:</b> platform NAV against the administrator within 0.05%; cash flows against the ledger within $0.05M.</li>
+     <li><b>Reasonableness:</b> quarter-on-quarter NAV moves over 10% and mark changes over 15% are flagged for the valuation committee.</li>
+     <li><b>Lineage:</b> each reported number links back to the source file, load time and rule version.</li>
+     <li><b>Access:</b> role-based views for management, finance and investor relations.</li></ul></div>`);
+}
+
+/* ---------- shell ---------- */
+function view(html){$('#view').innerHTML=html;}
+function bindStrat(){document.querySelectorAll('[data-strat]').forEach(b=>b.onclick=()=>{state.strat=b.dataset.strat;render();});}
+function render(){charts=[];hideTip();
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<a href="#${k}" ${k===state.tab?'aria-current="page"':''}>${l}</a>`).join('');
+  ({overview,funds,equity,credit,controls,implementation})[state.tab]();}
+function route(){const h=location.hash.slice(1);const t=TABS.find(t=>t[0]===h);state.tab=t?t[0]:'overview';render();}
+window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0);});
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>charts.forEach(f=>f()),120);}).observe(document.body);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+route();
+})();
+
+</script>
