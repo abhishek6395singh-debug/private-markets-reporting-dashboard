@@ -4,6 +4,12 @@ A simulated Private Equity and Private Credit reporting platform for a fictional
 
 **All data is synthetic.** The firm, funds, companies and borrowers are fictional, and the figures are not real performance.
 
+## Screenshots
+![Overview](screenshots/1-overview.png)
+![Funds](screenshots/2-funds.png)
+![Private credit](screenshots/3-private-credit.png)
+![Data and controls](screenshots/4-data-controls.png)
+
 ## What it shows
 - **Overview:** NAV, paid-in, distributions, net TVPI, DPI, net IRR, cash flows, IRR and TVPI by fund, auto-written commentary
 - **Funds:** sortable performance table and per-fund J-curve
