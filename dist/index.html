@@ -112,13 +112,13 @@ footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);color:v
 </style>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><div class="logo" aria-hidden="true">ARC</div>
-      <div><h1>Alder Ridge Capital · Private Markets Reporting</h1><div class="sub">Unified private equity and private credit portfolio view</div></div></div>
+    <div class="brand"><div class="logo" aria-hidden="true">AKS</div>
+      <div><h1>AKS Capital · Private Markets Reporting</h1><div class="sub">Unified private equity and private credit portfolio view</div></div></div>
     <div class="meta"><span class="chip">As of 30 Sep 2026 · Q3</span><span class="chip">USD millions</span><span class="chip sim" title="Fictional firm, funds and companies">Simulated data</span></div>
   </header>
   <nav class="tabs" id="tabs" aria-label="Dashboard sections"></nav>
   <main id="view" class="view"></main>
-  <footer>Alder Ridge Capital, its funds, portfolio companies and borrowers are fictional. All figures come from a seeded simulation built to show how a reporting platform consolidates administrator, loan-agent and ledger data into fund and portfolio metrics. They are not real performance. The base rate is assumed at 3.75%.</footer>
+  <footer>AKS Capital, its funds, portfolio companies and borrowers are fictional. All figures come from a seeded simulation built to show how a reporting platform consolidates administrator, loan-agent and ledger data into fund and portfolio metrics. They are not real performance. The base rate is assumed at 3.75%.</footer>
 </div>
 <div id="tip" role="tooltip" hidden></div>
 <script>
@@ -166,16 +166,16 @@ function pooled(funds,upTo){const p=pool(funds).rows;return metrics(p,upTo);}
 
 /* ---------- fund simulation ---------- */
 const FUND_DEFS=[
- {id:'BO3',name:'ARC Buyout Partners III',short:'Buyout III',strat:'PE',sub:'Buyout',vintage:2018,commit:600,callQ:20,pct:.94,g:.0385,vol:.022,dStart:10,dMult:1.0,fee:.0175,n:7,mult:2.05},
- {id:'DL1',name:'ARC Direct Lending I',short:'Direct Lending I',strat:'PC',sub:'Direct lending',vintage:2018,commit:500,callQ:8,pct:.92,g:.0262,vol:.003,inc:.0215,repay:12,fee:.0125,n:9},
- {id:'GE1',name:'ARC Growth Equity I',short:'Growth I',strat:'PE',sub:'Growth equity',vintage:2019,commit:450,callQ:18,pct:.9,g:.0425,vol:.03,dStart:11,dMult:.95,fee:.02,n:7,mult:1.95},
- {id:'MZ2',name:'ARC Mezzanine II',short:'Mezzanine II',strat:'PC',sub:'Mezzanine',vintage:2020,commit:400,callQ:10,pct:.9,g:.0285,vol:.004,inc:.0185,repay:14,fee:.015,n:7},
- {id:'SE1',name:'ARC Secondaries I',short:'Secondaries I',strat:'PE',sub:'Secondaries',vintage:2020,commit:350,callQ:12,pct:.88,g:.0335,vol:.015,dStart:4,dMult:1.3,fee:.01,n:8,mult:1.5},
- {id:'BO4',name:'ARC Buyout Partners IV',short:'Buyout IV',strat:'PE',sub:'Buyout',vintage:2021,commit:900,callQ:20,pct:.86,g:.036,vol:.024,dStart:12,dMult:1.0,fee:.0175,n:6,mult:1.4},
- {id:'DL2',name:'ARC Direct Lending II',short:'Direct Lending II',strat:'PC',sub:'Direct lending',vintage:2021,commit:800,callQ:10,pct:.93,g:.0268,vol:.003,inc:.0215,repay:14,fee:.0125,n:10},
- {id:'GE2',name:'ARC Growth Equity II',short:'Growth II',strat:'PE',sub:'Growth equity',vintage:2022,commit:700,callQ:18,pct:.8,g:.033,vol:.03,dStart:12,dMult:1,fee:.02,n:6,mult:1.18},
- {id:'SS1',name:'ARC Special Situations I',short:'Special Sits I',strat:'PC',sub:'Special situations',vintage:2022,commit:450,callQ:12,pct:.85,g:.031,vol:.012,inc:.011,repay:16,fee:.015,n:6},
- {id:'DL3',name:'ARC Direct Lending III',short:'Direct Lending III',strat:'PC',sub:'Direct lending',vintage:2024,commit:1000,callQ:8,pct:.78,g:.0262,vol:.003,inc:.0212,repay:14,fee:.0125,n:8}
+ {id:'BO3',name:'AKS Buyout Partners III',short:'Buyout III',strat:'PE',sub:'Buyout',vintage:2018,commit:600,callQ:20,pct:.94,g:.0385,vol:.022,dStart:10,dMult:1.0,fee:.0175,n:7,mult:2.05},
+ {id:'DL1',name:'AKS Direct Lending I',short:'Direct Lending I',strat:'PC',sub:'Direct lending',vintage:2018,commit:500,callQ:8,pct:.92,g:.0262,vol:.003,inc:.0215,repay:12,fee:.0125,n:9},
+ {id:'GE1',name:'AKS Growth Equity I',short:'Growth I',strat:'PE',sub:'Growth equity',vintage:2019,commit:450,callQ:18,pct:.9,g:.0425,vol:.03,dStart:11,dMult:.95,fee:.02,n:7,mult:1.95},
+ {id:'MZ2',name:'AKS Mezzanine II',short:'Mezzanine II',strat:'PC',sub:'Mezzanine',vintage:2020,commit:400,callQ:10,pct:.9,g:.0285,vol:.004,inc:.0185,repay:14,fee:.015,n:7},
+ {id:'SE1',name:'AKS Secondaries I',short:'Secondaries I',strat:'PE',sub:'Secondaries',vintage:2020,commit:350,callQ:12,pct:.88,g:.0335,vol:.015,dStart:4,dMult:1.3,fee:.01,n:8,mult:1.5},
+ {id:'BO4',name:'AKS Buyout Partners IV',short:'Buyout IV',strat:'PE',sub:'Buyout',vintage:2021,commit:900,callQ:20,pct:.86,g:.036,vol:.024,dStart:12,dMult:1.0,fee:.0175,n:6,mult:1.4},
+ {id:'DL2',name:'AKS Direct Lending II',short:'Direct Lending II',strat:'PC',sub:'Direct lending',vintage:2021,commit:800,callQ:10,pct:.93,g:.0268,vol:.003,inc:.0215,repay:14,fee:.0125,n:10},
+ {id:'GE2',name:'AKS Growth Equity II',short:'Growth II',strat:'PE',sub:'Growth equity',vintage:2022,commit:700,callQ:18,pct:.8,g:.033,vol:.03,dStart:12,dMult:1,fee:.02,n:6,mult:1.18},
+ {id:'SS1',name:'AKS Special Situations I',short:'Special Sits I',strat:'PC',sub:'Special situations',vintage:2022,commit:450,callQ:12,pct:.85,g:.031,vol:.012,inc:.011,repay:16,fee:.015,n:6},
+ {id:'DL3',name:'AKS Direct Lending III',short:'Direct Lending III',strat:'PC',sub:'Direct lending',vintage:2024,commit:1000,callQ:8,pct:.78,g:.0262,vol:.003,inc:.0212,repay:14,fee:.0125,n:8}
 ];
 
 function simulateFund(def,R){

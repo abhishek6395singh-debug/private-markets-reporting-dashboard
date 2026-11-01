@@ -1,6 +1,6 @@
 # Private Markets Portfolio Reporting & Implementation Dashboard
 
-A simulated Private Equity and Private Credit reporting platform for a fictional alternative asset manager (Alder Ridge Capital). It consolidates fund-administrator, loan-agent and ledger data into one management dashboard.
+A simulated Private Equity and Private Credit reporting platform for a fictional alternative asset manager (AKS Capital). It consolidates fund-administrator, loan-agent and ledger data into one management dashboard.
 
 **All data is synthetic.** The firm, funds, companies and borrowers are fictional, and the figures are not real performance.
 
